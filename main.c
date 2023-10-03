@@ -10,6 +10,9 @@
 #define V_BASE 8 /* ゼロ電圧時の MAX186 取得値 */
 #define V_MAGA 100349 /* 分圧倍率分子 */
 #define V_MAGB 999 /* 分圧倍率分母 */
+#define PWM_MIN 100 /* PWM最小値 */
+#define PWM_MID 400 /* PWMニュートラル値 */
+#define PWM_MAX 6400 /* PWM最大値 */
 
 
 typedef union tagHL16 {
@@ -131,10 +134,10 @@ uint16_t max186_to_volt(uint16_t vin) {
     return (uint16_t)v; // 0.1V単位
 }
 // 0.1V単位のターゲット値をMAX186値に変換
-uint16_t volt2max186(uint16_t vtg) {
+short volt2max186(uint16_t vtg) {
     unsigned long v = (unsigned long)vtg * (unsigned long)100 * V_MAGB;
     v /= V_MAGA;
-    return (uint16_t)v + V_BASE;
+    return (short)v + V_BASE;
 }
 
 
@@ -149,28 +152,58 @@ int main(void)
     WATCHDOG_TimerClear();
     LCD_i2c_init(8);
     
-    uint16_t pwm = 0;// PWM 設定値 0 to 6400
-    uint16_t target = 0; // 充電目標電圧MAX186値
+    short pwm = 0;// PWM 設定値 0 to 6400
+    short target = 0; // 充電目標電圧MAX186値
     uint8_t power = 0; // 1:ON 0:OFF
     uint8_t trig = 0; // 1:ON 0:OFF
 
+    short ad_v0 = 0; // 直前電圧
+    short ad_v1 = 0; // 未来電圧
+    short pwm0 = 0; // 直前PWM
+    short sa;
+    
     while (1) {
         WATCHDOG_TimerClear();
 
-        uint16_t ad_v = max186_to_volt(max186(MAX186_V));
+        short ad_v = max186_to_volt(max186(MAX186_V));
         send.pwm[0] = ad_v;
 
         target = volt2max186(data_ok & 4095);
         power = (data_ok & 0x8000) ? 1 : 0;
         trig = (data_ok & 0x4000) ? 1 : 0;
 
+        pwm = 0;
+        
         if (power) {
-            pwm = 4800;
-        }
-        else {
-            pwm = 0;
-        }
-        PDC1 = pwm;
+            if (ad_v <= target) {
+                ad_v1 = ad_v + ad_v - ad_v0;
+                if (ad_v1 > target) {
+                    sa = ad_v1 - target;
+                    if (sa < 16) {
+                        pwm = PWM_MIN + (((PWM_MID - PWM_MIN) * sa) >> 4);
+                    }
+                    else {
+                        pwm = PWM_MIN;
+                    }
+                }
+                else if (ad_v1 < target) {
+                    sa = target - ad_v1;
+                    if (sa < 128) {
+                        pwm = ((PWM_MAX * sa) >> 7);
+                    }
+                    else {
+                        pwm = PWM_MAX;
+                    }
+                }
+                else {
+                    pwm = PWM_MID;
+                }
+            }
+        }        
+        
+        PDC1 = (uint16_t)pwm;
+        ad_v0 = ad_v;
+        pwm0 = pwm;
         
         //LCD_i2C_cmd(0x80);
         //sprintf(buf, "%4d%5d%5d", target, power, trig);
