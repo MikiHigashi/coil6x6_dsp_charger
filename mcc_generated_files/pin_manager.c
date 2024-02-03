@@ -54,11 +54,6 @@
 #include "pin_manager.h"
 
 /**
- Section: File specific functions
-*/
-void (*CN_InterruptHandler)(void) = NULL;
-
-/**
  Section: Driver Interface Function Definitions
 */
 void PIN_MANAGER_Initialize (void)
@@ -66,14 +61,14 @@ void PIN_MANAGER_Initialize (void)
     /****************************************************************************
      * Setting the Output Latch SFR(s)
      ***************************************************************************/
-    LATA = 0x0002;
+    LATA = 0x0000;
     LATB = 0x0000;
 
     /****************************************************************************
      * Setting the GPIO Direction SFR(s)
      ***************************************************************************/
-    TRISA = 0x000F;
-    TRISB = 0x7A87;
+    TRISA = 0x000C;
+    TRISB = 0x5D87;
 
     /****************************************************************************
      * Setting the Weak Pull Up and Weak Pull Down SFR(s)
@@ -81,7 +76,7 @@ void PIN_MANAGER_Initialize (void)
     CNPDA = 0x0000;
     CNPDB = 0x0000;
     CNPUA = 0x0000;
-    CNPUB = 0x0080;
+    CNPUB = 0x0000;
 
     /****************************************************************************
      * Setting the Open Drain SFR(s)
@@ -92,65 +87,19 @@ void PIN_MANAGER_Initialize (void)
     /****************************************************************************
      * Setting the Analog/Digital Configuration SFR(s)
      ***************************************************************************/
-    ANSELA = 0x0001;
-    ANSELB = 0x0004;
+    ANSELA = 0x0000;
+    ANSELB = 0x0084;
     
     /****************************************************************************
      * Set the PPS
      ***************************************************************************/
     __builtin_write_OSCCONL(OSCCON & 0xbf); // unlock PPS
 
-    RPINR22bits.SDI2R = 0x0013;    //RA3->SPI2:SDI2
     RPINR22bits.SCK2R = 0x0014;    //RA4->SPI2:SCK2OUT
     RPOR0bits.RP20R = 0x0009;    //RA4->SPI2:SCK2OUT
     RPOR1bits.RP36R = 0x0008;    //RB4->SPI2:SDO2
+    RPINR22bits.SDI2R = 0x0013;    //RA3->SPI2:SDI2
 
     __builtin_write_OSCCONL(OSCCON | 0x40); // lock PPS
-    
-    /****************************************************************************
-     * Interrupt On Change: any
-     ***************************************************************************/
-    CNENBbits.CNIEB13 = 1;    //Pin : RB13
-    
-    /* Initialize IOC Interrupt Handler*/
-    CN_SetInterruptHandler(&CN_CallBack);
-    
-    /****************************************************************************
-     * Interrupt On Change: Interrupt Enable
-     ***************************************************************************/
-    IFS1bits.CNIF = 0; //Clear CNI interrupt flag
-    IEC1bits.CNIE = 1; //Enable CNI interrupt
-}
-
-void __attribute__ ((weak)) CN_CallBack(void)
-{
-
-}
-
-void CN_SetInterruptHandler(void (* InterruptHandler)(void))
-{ 
-    IEC1bits.CNIE = 0; //Disable CNI interrupt
-    CN_InterruptHandler = InterruptHandler; 
-    IEC1bits.CNIE = 1; //Enable CNI interrupt
-}
-
-void CN_SetIOCInterruptHandler(void *handler)
-{ 
-    CN_SetInterruptHandler(handler);
-}
-
-/* Interrupt service routine for the CNI interrupt. */
-void __attribute__ (( interrupt, no_auto_psv )) _CNInterrupt ( void )
-{
-    if(IFS1bits.CNIF == 1)
-    {
-        if(CN_InterruptHandler) 
-        { 
-            CN_InterruptHandler(); 
-        }
-        
-        // Clear the flag
-        IFS1bits.CNIF = 0;
-    }
 }
 

@@ -21,6 +21,9 @@
         <itemPath>mcc_generated_files/pwm.h</itemPath>
         <itemPath>mcc_generated_files/pwm_module_features.h</itemPath>
         <itemPath>mcc_generated_files/tmr2.h</itemPath>
+        <itemPath>mcc_generated_files/adc1.h</itemPath>
+        <itemPath>mcc_generated_files/adc_module_features.h</itemPath>
+        <itemPath>mcc_generated_files/dma.h</itemPath>
       </logicalFolder>
       <itemPath>lcd_i2c.h</itemPath>
       <itemPath>soft_i2c.h</itemPath>
@@ -45,6 +48,8 @@
         <itemPath>mcc_generated_files/spi2.c</itemPath>
         <itemPath>mcc_generated_files/pwm.c</itemPath>
         <itemPath>mcc_generated_files/tmr2.c</itemPath>
+        <itemPath>mcc_generated_files/adc1.c</itemPath>
+        <itemPath>mcc_generated_files/dma.c</itemPath>
       </logicalFolder>
       <itemPath>main.c</itemPath>
       <itemPath>lcd_i2c.c</itemPath>
@@ -358,6 +363,8 @@
                   value="${communication.interface.default}"/>
         <property key="communication.interface.jtag" value="2wire"/>
         <property key="communication.speed" value="${communication.speed.default}"/>
+        <property key="debugoptions.debug-startup" value="Use system settings"/>
+        <property key="debugoptions.reset-behaviour" value="Use system settings"/>
         <property key="debugoptions.simultaneous.debug" value="false"/>
         <property key="debugoptions.useswbreakpoints" value="false"/>
         <property key="freeze.timers" value="false"/>

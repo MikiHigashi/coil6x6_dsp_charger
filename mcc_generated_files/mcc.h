@@ -52,13 +52,15 @@
 #include "pin_manager.h"
 #include <stdint.h>
 #include <stdbool.h>
-#include "pwm.h"
-#include "spi2.h"
-#include "reset.h"
+#include "dma.h"
 #include "interrupt_manager.h"
 #include "traps.h"
-#include "tmr2.h"
+#include "pwm.h"
+#include "adc1.h"
+#include "reset.h"
+#include "spi2.h"
 #include "watchdog.h"
+#include "tmr2.h"
 
 #ifndef _XTAL_FREQ
 #define _XTAL_FREQ  139569375UL
